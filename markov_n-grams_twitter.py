@@ -2,9 +2,9 @@
 
 """Generate markov text from text files."""
 from sys import argv
-
 from random import choice
-
+import twitter
+import os
 
 SEUSS_TEXT = "green-eggs.txt"
 GETTY_TEXT = "gettysburg.txt"
@@ -115,16 +115,42 @@ def make_text(chains, ngram=2, set_sent=True):
 
     return " ".join(words)
 
+def tweet(random_text):
+
+    api = twitter.Api(
+        consumer_key=os.environ['TWITTER_CONSUMER_KEY'],
+        consumer_secret=os.environ['TWITTER_CONSUMER_SECRET'],
+        access_token_key=os.environ['TWITTER_ACCESS_TOKEN_KEY'],
+        access_token_secret=os.environ['TWITTER_ACCESS_TOKEN_SECRET'])
+
+    # This will print info about credentials to make sure 
+    # they're correct
+    print api.VerifyCredentials()
+
+    # Send a tweet
+    status = api.PostUpdate(random_text + " #aug17kat")
+    print status.text
+
 
 # Open the file and turn it into one long string
 # input_text = open_and_read_file(input_path)
-
+random_text = ""
 global_chains = {}
 
+
 # Get a Markov chain
-global_chains = process_texts([PNP_TEXT], ngram, global_chains)
+
+global_chains = process_texts(["humorous-ghost-stories.txt"], ngram, global_chains)
 
 # Produce random text
-random_text = make_text(global_chains, ngram)
+
+while len(random_text) > 140 or random_text == "":
+    random_text = make_text(global_chains, ngram)
 
 print random_text
+
+
+verify = raw_input("Do you want to tweet this Markov? (yes/no) ")
+if verify == "yes":
+
+    tweet(random_text)
